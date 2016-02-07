@@ -1,47 +1,31 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Script responsable to perform the necessar operations to solve the questions 
+# presented in Reproducible Research course, assessment 1
 
-
-
-## Loading and preprocessing the data
-
-The following script performs the data load, from the file "activity.csv".
-This script also process the data, since the imported date should be treat as
-a date object, not a string.
-
-```{r}
-
-    input_file = "activity.csv"
-    
-    src_dir = "./"
-    
+run_analysis <- function(src_dir = "../", input_file = "activity.csv")
+{
     # Load data.table package
     suppressPackageStartupMessages(library('data.table', character.only = TRUE));
     
     ## Initialization of directoryy that contains the figures presented in this
     ## report
-    dir.create(file.path(src_dir, "figures"), showWarnings = FALSE);
-
-    # Read de file and create a data table object
-    activityData <- fread(paste(src_dir, input_file, sep = ""), 
-                          header = T);
+    dir.create(file.path(".", "figures"), showWarnings = FALSE);
     
-    ## Change the information in column "date" from string to date type.
-    activityData[, date := as.Date(date)];
-```
+    ## Perform the data load
+    activityData <- loadData(src_dir);
+    
+    ## Process the evaluation of question 1
+    processQuestion1(activityData);
+    
+    ## Perfome the evaluation of question 2
+    stepsAcrossPeriods <- processQuestion2(activityData);
+    
+    completeActivityData <- processQuestion3(activityData, stepsAcrossPeriods);
+    
+    completeStepsAcrossPeriods <- processQuestion4(completeActivityData);
+}
 
-
-## What is mean total number of steps taken per day?
-
-The following script is used to plot a histogram, using the loaded data, related 
-to the number of steps per day, ignoring registers that have missing information.
-After the script, is presented the resulting plot.
-
-```{r}
+processQuestion1 <- function(activityData)
+{
     ## From the loaded date, perfomrs the loop to calculate the sum of steos
     ## by date
     stepsPerDay <- activityData[!is.na(steps), lapply(.SD, sum), by = date, .SDcols = 1]
@@ -53,34 +37,18 @@ After the script, is presented the resulting plot.
          main = "Histogram: Steps per Day")
     
     ## Save the plot in the paste figures
-    invisible(dev.copy(png, filename = "figures/histQuestion1.png"));
+    invisible(dev.copy(png, filename = paste("figures/", "histQuestion1.png")));
     invisible(dev.off());
-```
-
-The mean of steps per day is **10766.19** and the median is **10765**. This
-values are obtained through the script as follows. Just after, is presented the 
-output of this script.
-
-```{r}
+    
     ## Prints the mean and median of steps per day
     cat("Question 1 results:\n"
         ,"\tMeans total number of steps taken per day: ", mean(stepsPerDay$steps), "\n"
         ,"\tMedian total number of steps taken per day: ", median(stepsPerDay$steps), "\n");
-```
 
-## What is the average daily activity pattern?
+}
 
-In order to answer this question, is necessary to calculate the average of steps 
-by each 5 minutes interval, considering all days. The following script performs
-this calculation and plots the result. 
-
-How about the interval that presents the maximum number of steps? This value
-corresponds the maximum average in the graphic, which is also performed by the
-script and presented in the plot. 
-So, with an average of approximately **206**, the interval with more steps is 
-the **835**. 
-
-```{r}
+processQuestion2 <- function(activityData)
+{
     ## From the loaded date, perfomrs the loop to calculate the average of steos
     ## by interval, across all days.
     stepsAcrossPeriods <- activityData[!is.na(steps), lapply(.SD, mean), 
@@ -100,7 +68,7 @@ the **835**.
     
     ## Shows, in plot, the maximum average and corresponding interval.
     with(subset(stepsAcrossPeriods, avgSteps == maxAvg), 
-         text(interval, 0.97*avgSteps, paste("Average = ", 
+         text(interval, 0.99*avgSteps, paste("Average = ", 
                                              format(round(avgSteps, 2), 
                                                     nsmall = 2), 
                                              "\nInterval = ", interval), 
@@ -109,25 +77,18 @@ the **835**.
     ## Save the plot in the paste figures
     invisible(dev.copy(png, filename = "figures/plotQuestion2.png"));
     invisible(dev.off());
-```
-## Imputing missing values
+    
+    stepsAcrossPeriods
+}
 
-There is **2304** rows with missing step information, result obtained through
-the following script (followed by the script output):
-
-```{r}
+processQuestion3 <- function(activityData, stepsAcrossPeriods)
+{
     ## Generates a dataset with the total of missing data per day
     missingData <- activityData[is.na(steps), ];
     
     cat("Question 3 results:\n"
         ,"\tTotal number of missing data: ", nrow(missingData), "\n");
-```
-
-The rows intervals with no step information in original dataset were filled with
-the corresponding average of steps for the period. The following script performs
-this operation and plots the histogram of steps per day.
-
-```{r}
+    
     completeActivityData <- copy(activityData)
     
     ## Fill the missing data with the average of the corresponding period
@@ -138,43 +99,28 @@ this operation and plots the histogram of steps per day.
     
     ## From the loaded date, perfomrs the loop to calculate the sum of steos
     ## by date
-    completeStepsPerDay <- completeActivityData[!is.na(steps), lapply(.SD, sum), by = date, .SDcols = 1]
+    stepsPerDay <- completeActivityData[!is.na(steps), lapply(.SD, sum), by = date, .SDcols = 1]
         
     ## Builds the histogram of steps per day
-    hist(completeStepsPerDay$steps, col = "red", 
+    hist(stepsPerDay$steps, col = "red", 
          xlab = "Number of Steps per Day",
          main = "Histogram: Steps per Day")
         
     ## Save the plot in the paste figures
     invisible(dev.copy(png, filename = paste("figures/", "histQuestion3.png")));
     invisible(dev.off());
-```
-
-Filling the data in this way, is not expected significant changes in the mean
-and the median, because this data follows the "pattern" of the previous dataset.
-The following script presents the results related to the new dataset and 
-supports the conclusions. (results from the script are presented as follows).
-
-The results for mean and median of steps by interval across days are, 
-repectively, **10765.64** and **10762**.
-
-```{r}
+        
     ## Prints the mean and median of steps per day
     cat("Question 3 results:\n"
-        ,"\tMeans total number of steps taken per day: ", mean(completeStepsPerDay$steps), "\n"
-        ,"\tMedian total number of steps taken per day: ", median(completeStepsPerDay$steps), "\n");
-```
+        ,"\tMeans total number of steps taken per day: ", mean(stepsPerDay$steps), "\n"
+        ,"\tMedian total number of steps taken per day: ", median(stepsPerDay$steps), "\n");
+    
+    completeActivityData
+}
 
-## Are there differences in activity patterns between weekdays and weekends?
-
-Tho verify the patterns betweens steps from weekdays and weekends, the following
-script was elaborated to produce a plot that allow the visualization of these
-patterns. Seems that in weekdays, there is more movement at the beginning of the
-day and in the weekends, the steps are more equality distributed in the middle 
-of the day.
-
-```{r}
-   # Load data.table package
+processQuestion4 <- function(activityData)
+{
+    # Load data.table package
     suppressPackageStartupMessages(library('lattice', character.only = TRUE));
     
     # Just to set the correct locale for comparison
@@ -182,7 +128,9 @@ of the day.
     if(osType == "unix") 
     {
         invisible(Sys.setlocale("LC_TIME", "en_US.UTF-8"));
-    }  else {
+    } 
+    else 
+    {
         invisible(Sys.setlocale("LC_TIME", "English"));
     }
   
@@ -212,6 +160,16 @@ of the day.
     ## Save the plot in the paste figures
     invisible(dev.copy(png, filename = paste("figures/", "plotQuestion4.png")));
     invisible(dev.off());
-```
+    
+    stepsAcrossPeriods
+}
 
-#### **NOTE: The included script *run_analysis.R* in this repository, contains the code presented in this reports, organized in order to produce all results presented here in a more easy way**
+loadData <- function(src_dir = "../", input_file = "activity.csv")
+{
+    # Read de file and create a data table object
+    activityData <- fread(paste(src_dir, input_file, sep = ""), 
+                          header = T);
+    
+    ## Change the information in column "date" from string to date type.
+    activityData[, date := as.Date(date)];
+}

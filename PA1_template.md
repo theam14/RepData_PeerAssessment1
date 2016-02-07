@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 
 
@@ -13,8 +8,8 @@ The following script performs the data load, from the file "activity.csv".
 This script also process the data, since the imported date should be treat as
 a date object, not a string.
 
-```{r}
 
+```r
     input_file = "activity.csv"
     
     src_dir = "./"
@@ -41,7 +36,8 @@ The following script is used to plot a histogram, using the loaded data, related
 to the number of steps per day, ignoring registers that have missing information.
 After the script, is presented the resulting plot.
 
-```{r}
+
+```r
     ## From the loaded date, perfomrs the loop to calculate the sum of steos
     ## by date
     stepsPerDay <- activityData[!is.na(steps), lapply(.SD, sum), by = date, .SDcols = 1]
@@ -51,7 +47,11 @@ After the script, is presented the resulting plot.
     hist(stepsPerDay$steps, col = "blue", 
          xlab = "Number of Steps per Day",
          main = "Histogram: Steps per Day")
-    
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-2-1.png)
+
+```r
     ## Save the plot in the paste figures
     invisible(dev.copy(png, filename = "figures/histQuestion1.png"));
     invisible(dev.off());
@@ -61,11 +61,18 @@ The mean of steps per day is **10766.19** and the median is **10765**. This
 values are obtained through the script as follows. Just after, is presented the 
 output of this script.
 
-```{r}
+
+```r
     ## Prints the mean and median of steps per day
     cat("Question 1 results:\n"
         ,"\tMeans total number of steps taken per day: ", mean(stepsPerDay$steps), "\n"
         ,"\tMedian total number of steps taken per day: ", median(stepsPerDay$steps), "\n");
+```
+
+```
+## Question 1 results:
+##  	Means total number of steps taken per day:  10766.19 
+##  	Median total number of steps taken per day:  10765
 ```
 
 ## What is the average daily activity pattern?
@@ -80,7 +87,8 @@ script and presented in the plot.
 So, with an average of approximately **206**, the interval with more steps is 
 the **835**. 
 
-```{r}
+
+```r
     ## From the loaded date, perfomrs the loop to calculate the average of steos
     ## by interval, across all days.
     stepsAcrossPeriods <- activityData[!is.na(steps), lapply(.SD, mean), 
@@ -105,7 +113,11 @@ the **835**.
                                                     nsmall = 2), 
                                              "\nInterval = ", interval), 
               cex = 0.75, pos = 4));
-    
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)
+
+```r
     ## Save the plot in the paste figures
     invisible(dev.copy(png, filename = "figures/plotQuestion2.png"));
     invisible(dev.off());
@@ -115,7 +127,8 @@ the **835**.
 There is **2304** rows with missing step information, result obtained through
 the following script (followed by the script output):
 
-```{r}
+
+```r
     ## Generates a dataset with the total of missing data per day
     missingData <- activityData[is.na(steps), ];
     
@@ -123,11 +136,17 @@ the following script (followed by the script output):
         ,"\tTotal number of missing data: ", nrow(missingData), "\n");
 ```
 
+```
+## Question 3 results:
+##  	Total number of missing data:  2304
+```
+
 The rows intervals with no step information in original dataset were filled with
 the corresponding average of steps for the period. The following script performs
 this operation and plots the histogram of steps per day.
 
-```{r}
+
+```r
     completeActivityData <- copy(activityData)
     
     ## Fill the missing data with the average of the corresponding period
@@ -144,7 +163,11 @@ this operation and plots the histogram of steps per day.
     hist(completeStepsPerDay$steps, col = "red", 
          xlab = "Number of Steps per Day",
          main = "Histogram: Steps per Day")
-        
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)
+
+```r
     ## Save the plot in the paste figures
     invisible(dev.copy(png, filename = paste("figures/", "histQuestion3.png")));
     invisible(dev.off());
@@ -158,11 +181,18 @@ supports the conclusions. (results from the script are presented as follows).
 The results for mean and median of steps by interval across days are, 
 repectively, **10765.64** and **10762**.
 
-```{r}
+
+```r
     ## Prints the mean and median of steps per day
     cat("Question 3 results:\n"
         ,"\tMeans total number of steps taken per day: ", mean(completeStepsPerDay$steps), "\n"
         ,"\tMedian total number of steps taken per day: ", median(completeStepsPerDay$steps), "\n");
+```
+
+```
+## Question 3 results:
+##  	Means total number of steps taken per day:  10765.64 
+##  	Median total number of steps taken per day:  10762
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
@@ -173,7 +203,8 @@ patterns. Seems that in weekdays, there is more movement at the beginning of the
 day and in the weekends, the steps are more equality distributed in the middle 
 of the day.
 
-```{r}
+
+```r
    # Load data.table package
     suppressPackageStartupMessages(library('lattice', character.only = TRUE));
     
@@ -208,7 +239,11 @@ of the day.
            ylab="Average Number of Steps", xlab="Interval", type = "l");
     
     print(q4Plot);
-    
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)
+
+```r
     ## Save the plot in the paste figures
     invisible(dev.copy(png, filename = paste("figures/", "plotQuestion4.png")));
     invisible(dev.off());
